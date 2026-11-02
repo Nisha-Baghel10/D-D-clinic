@@ -26,15 +26,14 @@ class AppointmentController extends Controller
     }
 
     // Create Form
-    public function create()
+    public function create($id = null)
     {
         $patients = Patient::all();
         $doctors = Doctor::all();
         $Treatments = Treatment::all();
-
-        return view('appointment.create', compact('patients', 'doctors', 'Treatments'));
+        $patient = $id ? Patient::findOrFail($id) : null;
+        return view('appointment.create', compact('patients', 'doctors', 'Treatments', 'id', 'patient'));
     }
-
 
     public function appointmentsUpdate(Request $request)
     {

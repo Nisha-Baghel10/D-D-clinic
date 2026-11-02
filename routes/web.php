@@ -181,7 +181,7 @@ Route::prefix('admin/appointment')->name('appointment.')->group(function () {
     )
         ->name('appointmentsUpdate');
     Route::get('/index', [AppointmentController::class, 'index'])->name('index');
-    Route::get('/create', [AppointmentController::class, 'create'])->name('create');
+    Route::get('/create/{id?}', [AppointmentController::class, 'create'])->name('create');
     Route::post('/store', [AppointmentController::class, 'store'])->name('store');
     Route::get('/{appointment}/edit', [AppointmentController::class, 'edit'])->name('edit');
     Route::put('/{appointment}', [AppointmentController::class, 'update'])->name('update');
@@ -380,6 +380,7 @@ Route::prefix('admin')->name('patient.')->middleware(['auth', 'admin'])->group(f
         ->name('backup');
     Route::get('/patient-backup/{id}/pdf', [PatientController::class, 'patientBackupSinglePdf'])
         ->name('backup.single.pdf');
+    Route::post('/patient-backup/bulk-pdf', [PatientController::class, 'patientBackupBulkPdf'])->name('backup.bulk.pdf');
 });
 
 // Maintenance Register Routes
@@ -586,8 +587,8 @@ Route::middleware(['auth'])->group(function () {
             [IntraoralExaminationController::class, 'edit']
         )->name('IntraoralExamination.edit');
 
-        Route::put(
-            '/intraoral/{patient}/update/{id}',
+        Route::post(
+            '/intraoral/update/{id}',
             [IntraoralExaminationController::class, 'update']
         )->name('IntraoralExamination.update');
 

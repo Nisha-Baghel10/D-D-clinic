@@ -3,7 +3,137 @@
 @section('title', 'Notes')
 
 @section('content')
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 
+    <style>
+        .select2-container {
+            width: 100% !important;
+        }
+
+        .select2-container .select2-selection--single {
+            height: 48px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__rendered {
+            line-height: 46px;
+            padding-left: 14px;
+            color: #333;
+        }
+
+        .select2-container--default .select2-selection--single .select2-selection__arrow {
+            height: 46px;
+        }
+
+        .select2-dropdown {
+            border-radius: 6px;
+        }
+
+        .select2-results__options {
+            max-height: 400px !important;
+            overflow-y: auto;
+        }
+
+        .select2-results__option {
+            padding: 10px 14px;
+        }
+
+        /* Apply only to Add/Edit Sub Treatment */
+        :is(#sub_treatment, #edit_sub_treatment)+.select2-container {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+
+        :is(#sub_treatment, #edit_sub_treatment)+.select2-container .select2-selection--multiple {
+            display: block !important;
+            height: auto !important;
+            min-height: 39px !important;
+            padding: 5px 8px !important;
+            border: 1px solid #ced4da !important;
+            border-radius: 4px !important;
+            background: #fff !important;
+            box-sizing: border-box !important;
+        }
+
+        /* Keep all selected tags inside the field */
+        :is(#sub_treatment, #edit_sub_treatment)+.select2-container .select2-selection__rendered {
+            display: inline !important;
+            height: auto !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            line-height: normal !important;
+            list-style: none !important;
+            white-space: normal !important;
+        }
+
+        :is(#sub_treatment, #edit_sub_treatment)+.select2-container .select2-selection__choice {
+            position: relative !important;
+            display: inline-block !important;
+            float: none !important;
+            max-width: 100% !important;
+            margin: 3px 4px 3px 0 !important;
+            padding: 3px 8px 3px 25px !important;
+            background: #f0edff !important;
+            color: #392b97 !important;
+            border: 1px solid #ded8ff !important;
+            border-radius: 4px !important;
+            font-size: 12px !important;
+            line-height: 20px !important;
+            white-space: normal !important;
+            overflow-wrap: anywhere !important;
+            box-sizing: border-box !important;
+        }
+
+        :is(#sub_treatment, #edit_sub_treatment)+.select2-container .select2-selection__choice__display {
+            padding: 0 !important;
+            color: #392b97 !important;
+        }
+
+        :is(#sub_treatment, #edit_sub_treatment)+.select2-container .select2-selection__choice__remove {
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            height: 100% !important;
+            width: 21px !important;
+            padding: 0 !important;
+            background: transparent !important;
+            color: #392b97 !important;
+            border: 0 !important;
+            border-right: 1px solid #ded8ff !important;
+            border-radius: 4px 0 0 4px !important;
+            font-size: 16px !important;
+            line-height: normal !important;
+        }
+
+        :is(#sub_treatment, #edit_sub_treatment)+.select2-container .select2-search--inline {
+            display: inline-block !important;
+            float: none !important;
+            max-width: 100% !important;
+            vertical-align: middle !important;
+        }
+
+        :is(#sub_treatment, #edit_sub_treatment)+.select2-container .select2-search__field {
+            height: 24px !important;
+            min-height: 24px !important;
+            max-width: 100% !important;
+            margin: 3px 0 !important;
+            padding: 0 !important;
+            background: transparent !important;
+            border: 0 !important;
+            box-shadow: none !important;
+            font-family: inherit !important;
+            font-size: 13px !important;
+            line-height: 24px !important;
+        }
+
+        :is(#sub_treatment, #edit_sub_treatment)+.select2-container--focus .select2-selection--multiple {
+            border-color: #392b97 !important;
+            box-shadow: 0 0 0 2px rgba(57, 43, 151, 0.1) !important;
+        }
+    </style>
     <div class="main-content">
         <div class="page-content">
             <div class="container-fluid">
@@ -61,7 +191,8 @@
                                         <div class="mb-3 col-md-3">
                                             <label for="mode" class="form-label">Treatment<span
                                                     class="text-danger">*</span></label>
-                                            <select name="treatment" id="treatment" class="form-select" required>
+                                            <select name="treatment" id="treatment" class="form-control treatment-select"
+                                                required>
                                                 <option value="">--Please Select--</option>
                                                 @foreach ($Treatment as $treat)
                                                     <option value="{{ $treat->id }}">{{ $treat->treatment_name }}
@@ -73,8 +204,9 @@
                                         <div class="mb-3 col-md-3">
                                             <label for="mode" class="form-label">Sub Treatment</label>
                                             <select name="sub_treatment[]" id="sub_treatment" class="form-select" multiple>
-                                                <option value="">--Please Select--</option>
+                                                <!--<option value="">--Please Select--</option>-->
                                             </select>
+
                                         </div>
                                         <div class="mb-3 col-md-3">
                                             <label for="tooth_no" class="form-label">Tooth No</label>
@@ -126,7 +258,7 @@
                             <div class="card-header">
                                 <button type="button" class="btn btn-sm btn-info" id="toggleAmountBtn">
                                     Treatment List | Total Amount: <span id="amountDisplay"
-                                        class="d-none">{{ $NetAmount }}</span>
+                                        class="d-none">{{ $Totalamount }}</span>
                                 </button>
                             </div>
                             <div class="card-body">
@@ -269,7 +401,7 @@
                         <div class="mb-3">
                             <label for="edit_sub_treatment" class="form-label">Sub Treatment</label>
                             <select name="sub_treatment[]" id="edit_sub_treatment" class="form-select" multiple>
-                                <option value="">--Please Select--</option>
+                                <!--<option value="">--Please Select--</option>-->
                             </select>
                         </div>
 
@@ -361,7 +493,7 @@
     <!-- Delete Modal End -->
 
     <!-- Treatment Plan Modal -->
-     <div class="modal fade" id="treatmentPlanModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="treatmentPlanModal" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg modal-dialog-centered">
             <div class="modal-content">
                 <div class="modal-header">
@@ -436,10 +568,10 @@
                                                             @endif
                                                         </div>
                                                     @endforeach
-                                                    
+
                                                 </div>
                                             @endif
-                                            @if(isset($plan->rct_ipc_comment) && $plan->rct_ipc_comment != "")
+                                            @if (isset($plan->rct_ipc_comment) && $plan->rct_ipc_comment != '')
                                                 <strong>Comments :</strong> {{ $plan->rct_ipc_comment ?? '-' }}
                                             @endif
                                         </td>
@@ -470,7 +602,7 @@
                                                     @endforeach
                                                 </div>
                                             @endif
-                                            @if(isset($plan->extraction_comment) && $plan->extraction_comment != "")
+                                            @if (isset($plan->extraction_comment) && $plan->extraction_comment != '')
                                                 <strong>Comments :</strong> {{ $plan->extraction_comment ?? '-' }}
                                             @endif
                                         </td>
@@ -501,7 +633,7 @@
                                                     @endforeach
                                                 </div>
                                             @endif
-                                            @if(isset($plan->restoration_comment) && $plan->restoration_comment != "")
+                                            @if (isset($plan->restoration_comment) && $plan->restoration_comment != '')
                                                 <strong>Comments : </strong> {{ $plan->restoration_comment ?? '-' }}
                                             @endif
                                         </td>
@@ -532,7 +664,7 @@
                                                     @endforeach
                                                 </div>
                                             @endif
-                                            @if(isset($plan->prosthesis_comment) && $plan->prosthesis_comment != "")
+                                            @if (isset($plan->prosthesis_comment) && $plan->prosthesis_comment != '')
                                                 <strong>Comments : </strong> {{ $plan->prosthesis_comment ?? '-' }}
                                             @endif
                                         </td>
@@ -731,6 +863,7 @@
 
 @section('scripts')
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         // Toggle Total Amount Display
         $(document).ready(function() {
@@ -740,7 +873,98 @@
         });
     </script>
     <script>
-     $(document).on('click', '.completeOtherTreatment', function() {
+        $(document).ready(function() {
+            $('#sub_treatment').select2({
+                placeholder: '--Please Select--',
+                width: '100%',
+                closeOnSelect: false
+            });
+
+            $('#edit_sub_treatment').select2({
+                placeholder: '--Please Select--',
+                width: '100%',
+                closeOnSelect: false,
+                dropdownParent: $('#editNoteModal')
+            });
+        });
+
+        function loadSubTreatments(
+            treatmentId,
+            dropdownSelector,
+            selectedValue = null
+        ) {
+            const dropdown = $(dropdownSelector);
+
+            // Cancel a previous request if the treatment changes quickly.
+            const previousRequest = dropdown.data('subTreatmentRequest');
+
+            if (previousRequest) {
+                previousRequest.abort();
+            }
+
+            dropdown.empty().val([]).trigger('change');
+
+            if (!treatmentId) {
+                dropdown.prop('disabled', false);
+                return;
+            }
+
+            const selectedArr = (
+                    Array.isArray(selectedValue) ?
+                    selectedValue :
+                    String(selectedValue ?? '').split(',')
+                )
+                .map(value => String(value).trim())
+                .filter(Boolean);
+
+            const routeUrl =
+                "{{ route('subtreatment.getByTreatment', ['treatment_id' => 'TREATMENT_ID']) }}";
+
+            dropdown.prop('disabled', true);
+
+            const request = $.ajax({
+                url: routeUrl.replace(
+                    'TREATMENT_ID',
+                    encodeURIComponent(treatmentId)
+                ),
+                type: 'GET',
+
+                success: function(response) {
+                    dropdown.empty();
+
+                    (Array.isArray(response) ? response : []).forEach(function(item) {
+                        const value = String(item.sub_treatment_id);
+
+                        dropdown.append(
+                            new Option(
+                                item.name,
+                                value,
+                                false,
+                                selectedArr.includes(value)
+                            )
+                        );
+                    });
+
+                    dropdown.trigger('change');
+                },
+
+                error: function(xhr, status) {
+                    if (status !== 'abort') {
+                        dropdown.empty().trigger('change');
+                        alert('Unable to load sub treatments. Please try again.');
+                    }
+                },
+
+                complete: function() {
+                    dropdown.prop('disabled', false);
+                }
+            });
+
+            dropdown.data('subTreatmentRequest', request);
+        }
+    </script>
+    <script>
+        $(document).on('click', '.completeOtherTreatment', function() {
 
             let btn = $(this);
 
@@ -802,6 +1026,7 @@
             });
 
         });
+
         function getEditData(id) {
 
             var url = "{{ route('notes.edit', ':id') }}";
@@ -870,56 +1095,56 @@
         }
     </script>
     <script>
-        function loadSubTreatments(treatmentId, dropdownSelector, selectedValue = null) {
-            const dropdown = $(dropdownSelector);
-            dropdown.empty().append('<option value="">--Please Select--</option>');
+        // function loadSubTreatments(treatmentId, dropdownSelector, selectedValue = null) {
+        //     const dropdown = $(dropdownSelector);
+        //     dropdown.empty().append('<option value="">--Please Select--</option>');
 
-            if (!treatmentId) {
-                return;
-            }
+        //     if (!treatmentId) {
+        //         return;
+        //     }
 
-            const routeUrl = "{{ route('subtreatment.getByTreatment', ['treatment_id' => 'TREATMENT_ID']) }}";
-            const url = routeUrl.replace('TREATMENT_ID', treatmentId);
+        //     const routeUrl = "{{ route('subtreatment.getByTreatment', ['treatment_id' => 'TREATMENT_ID']) }}";
+        //     const url = routeUrl.replace('TREATMENT_ID', treatmentId);
 
-            $.ajax({
-                url: url,
-                type: 'GET',
-                success: function(response) {
-                    if (response && response.length) {
-                        // Normalize selectedValue into array of strings for reliable comparison
-                        let selectedArr = [];
-                        if (selectedValue) {
-                            if (Array.isArray(selectedValue)) {
-                                selectedArr = selectedValue.map(String);
-                            } else {
-                                selectedArr = [String(selectedValue)];
-                            }
-                        }
+        //     $.ajax({
+        //         url: url,
+        //         type: 'GET',
+        //         success: function(response) {
+        //             if (response && response.length) {
+        //                 // Normalize selectedValue into array of strings for reliable comparison
+        //                 let selectedArr = [];
+        //                 if (selectedValue) {
+        //                     if (Array.isArray(selectedValue)) {
+        //                         selectedArr = selectedValue.map(String);
+        //                     } else {
+        //                         selectedArr = [String(selectedValue)];
+        //                     }
+        //                 }
 
-                        response.forEach(function(item) {
-                            const valStr = String(item.sub_treatment_id);
-                            const option = $('<option></option>')
-                                .attr('value', item.sub_treatment_id)
-                                .text(item.name);
+        //                 response.forEach(function(item) {
+        //                     const valStr = String(item.sub_treatment_id);
+        //                     const option = $('<option></option>')
+        //                         .attr('value', item.sub_treatment_id)
+        //                         .text(item.name);
 
-                            if (selectedArr.length && selectedArr.indexOf(valStr) !== -1) {
-                                option.prop('selected', true);
-                            }
+        //                     if (selectedArr.length && selectedArr.indexOf(valStr) !== -1) {
+        //                         option.prop('selected', true);
+        //                     }
 
-                            dropdown.append(option);
-                        });
+        //                     dropdown.append(option);
+        //                 });
 
-                        // If dropdown is a multi-select, ensure browser reflects selection
-                        if (selectedArr.length) {
-                            dropdown.val(selectedArr);
-                        }
-                    }
-                },
-                error: function() {
-                    dropdown.empty().append('<option value="">Unable to load sub treatments</option>');
-                }
-            });
-        }
+        //                 // If dropdown is a multi-select, ensure browser reflects selection
+        //                 if (selectedArr.length) {
+        //                     dropdown.val(selectedArr);
+        //                 }
+        //             }
+        //         },
+        //         error: function() {
+        //             dropdown.empty().append('<option value="">Unable to load sub treatments</option>');
+        //         }
+        //     });
+        // }
 
         $(document).ready(function() {
             $("#treatment").on('change', function() {

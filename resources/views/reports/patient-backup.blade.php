@@ -5,15 +5,21 @@
 @section('content')
 
     <style>
+        .last-visit-date {
+            display: inline-block;
+            background: #eaf5ff;
+            color: #075985;
+            font-size: 12px;
+            font-weight: 700;
+            padding: 4px 9px;
+            border-radius: 5px;
+        }
+
         .patient-backup-page {
             background: #f5f7fb;
             min-height: 100vh;
             padding-bottom: 30px;
         }
-
-        /* ===============================
-                                                    PAGE HEADER
-                                                ================================ */
 
         .backup-main-title {
             color: #172554 !important;
@@ -28,11 +34,6 @@
             margin: 0;
         }
 
-
-        /* ===============================
-                                                    FILTER
-                                                ================================ */
-
         .backup-filter-box {
             background: #ffffff;
             border: 1px solid #e4e7ec;
@@ -43,11 +44,6 @@
             box-shadow:
                 0 2px 8px rgba(0, 0, 0, .03);
         }
-
-
-        /* ===============================
-                                                 PATIENT CARD
-                                            ================================ */
 
         .patient-report-card {
             background: #ffffff;
@@ -80,11 +76,6 @@
             font-size: 12px;
         }
 
-
-        /* ===============================
-                                             STATUS
-                                          ================================ */
-
         .backup-status {
             padding: 5px 10px;
             border-radius: 30px;
@@ -103,10 +94,6 @@
             color: #166534;
         }
 
-
-        /* ===============================
-                                    SUMMARY
-                                    ================================ */
         .patient-summary-wrapper {
             background: #fafbfc;
             padding: 14px 18px;
@@ -152,11 +139,6 @@
             background: #f1efff;
             color: #5142a6;
         }
-
-
-        /* ===============================
-                                  DETAILS
-                                ================================ */
 
         .backup-section-title {
 
@@ -207,21 +189,12 @@
             font-weight: 600;
         }
 
-        /* ===============================
-                                    TABLE
-                                ================================ */
-
         .backup-table {
 
             border-color: #e4e7ec !important;
 
             margin-bottom: 0;
         }
-
-
-        /*
-                                                                                                        YOUR HEADING COLOR FIX
-                                                                                                        */
 
         .backup-table thead th {
 
@@ -241,7 +214,6 @@
 
             vertical-align: middle;
         }
-
 
         .backup-table tbody td {
 
@@ -286,10 +258,6 @@
         }
 
 
-        /* ===============================
-                                                                                                           BUTTON
-                                                                                                        ================================ */
-
         .backup-details-btn {
 
             background: #ffffff;
@@ -325,16 +293,10 @@
             font-size: 12px;
         }
 
-
-        /* ===============================
-                                                                                                           PAGINATION
-                                                                                                        ================================ */
-
         .backup-pagination {
 
             margin-top: 20px;
         }
-
 
         @media(max-width: 767px) {
 
@@ -359,14 +321,42 @@
             }
 
         }
+
+        /* Bulk PDF controls */
+        .backup-bulk-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            margin-bottom: 18px;
+            padding: 14px 18px;
+            background: #fff;
+            border: 1px solid #e4e7ec;
+            border-radius: 10px;
+        }
+
+        .backup-bulk-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+            accent-color: #253c7c;
+        }
+
+        .backup-patient-select {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            margin-right: 12px;
+        }
+
+        .patient-report-card.is-selected {
+            border-color: #253c7c;
+        }
     </style>
 
-
-
     <div class="main-content">
-
         <div class="page-content patient-backup-page">
-
             <div class="container-fluid">
                 <div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
                     <div>
@@ -429,7 +419,6 @@
 
                             </div>
 
-
                         </div>
 
                     </form>
@@ -457,6 +446,28 @@
                 @endphp
 
 
+
+                {{-- Selected patient IDs are posted using the checkbox form attribute. --}}
+                <form id="bulkPatientPdfForm" method="POST" action="{{ route('patient.backup.bulk.pdf') }}">
+                    @csrf
+                </form>
+
+                <div class="backup-bulk-toolbar">
+                    <label class="d-flex align-items-center gap-2 mb-0" for="selectAllPatients">
+                        <input type="checkbox" id="selectAllPatients" class="backup-bulk-checkbox"
+                            {{ $patients->count() === 0 ? 'disabled' : '' }}>
+                        <span>Select All (Current Page)</span>
+                    </label>
+
+                    <div class="d-flex align-items-center gap-3 flex-wrap">
+                        <span id="selectedPatientCount" class="text-muted small">0 selected</span>
+                        <button type="submit" form="bulkPatientPdfForm" id="bulkPdfDownloadBtn" class="btn btn-danger"
+                            disabled>
+                            <i class="ri-download-2-line"></i>
+                            Download Selected PDFs (ZIP)
+                        </button>
+                    </div>
+                </div>
 
                 {{-- =====================================
                  PATIENTS
@@ -491,6 +502,12 @@
 
 
                                 <div class="col-lg-7 col-md-7">
+                                    <label class="backup-patient-select" for="patientCheckbox{{ $patient->id }}">
+                                        <input type="checkbox" id="patientCheckbox{{ $patient->id }}"
+                                            class="backup-bulk-checkbox patient-bulk-checkbox" form="bulkPatientPdfForm"
+                                            name="patient_ids[]" value="{{ $patient->id }}">
+                                        <span class="small fw-semibold">Select</span>
+                                    </label>
 
                                     <h5 class="patient-report-name">
 
@@ -516,6 +533,17 @@
                                         </strong>
 
                                         {{ $patient->mobile1 ?? '-' }}
+                                        &nbsp; | &nbsp;
+
+                                        <strong>Last Visit:</strong>
+
+                                        @if ($patient->last_visit_date)
+                                            <span class="last-visit-date">
+                                                {{ $displayDate($patient->last_visit_date) }}
+                                            </span>
+                                        @else
+                                            <span class="text-muted">No Visit</span>
+                                        @endif
 
                                     </div>
 
@@ -594,15 +622,11 @@
                                     <div class="backup-summary summary-treatment">
 
                                         <small>
-
                                             Total Treatment
-
                                         </small>
 
                                         <strong>
-
                                             ₹{{ number_format($patient->total_treatment_amount, 2) }}
-
                                         </strong>
 
                                     </div>
@@ -980,7 +1004,7 @@
 
 
                                             @forelse($patient->notes
-                                                                                                                                            as $index => $note)
+                                                                                                                                                                                                                                as $index => $note)
                                                 <tr>
 
                                                     <td>
@@ -1286,5 +1310,40 @@
         </div>
 
     </div>
+
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('bulkPatientPdfForm');
+            const selectAll = document.getElementById('selectAllPatients');
+            const checkboxes = Array.from(document.querySelectorAll('.patient-bulk-checkbox'));
+            const count = document.getElementById('selectedPatientCount');
+            const button = document.getElementById('bulkPdfDownloadBtn');
+
+            function refreshSelection() {
+                const selected = checkboxes.filter(box => box.checked).length;
+                count.textContent = selected + ' selected';
+                button.disabled = selected === 0;
+                selectAll.checked = checkboxes.length > 0 && selected === checkboxes.length;
+                selectAll.indeterminate = selected > 0 && selected < checkboxes.length;
+                checkboxes.forEach(box => {
+                    box.closest('.patient-report-card')?.classList.toggle('is-selected', box.checked);
+                });
+            }
+
+            selectAll.addEventListener('change', function() {
+                checkboxes.forEach(box => box.checked = selectAll.checked);
+                refreshSelection();
+            });
+            checkboxes.forEach(box => box.addEventListener('change', refreshSelection));
+            form.addEventListener('submit', function(event) {
+                if (!checkboxes.some(box => box.checked)) {
+                    event.preventDefault();
+                    alert('Please select at least one patient.');
+                }
+            });
+            refreshSelection();
+        });
+    </script>
 
 @endsection

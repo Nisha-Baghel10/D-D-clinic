@@ -120,17 +120,26 @@ class TreatmentPlanController extends Controller
         ));
     }
 
+
     public function update(Request $request, $examinationid)
     {
         TreatmentPlan::where('id', $examinationid)
             ->update([
-                'other_treatment' => $request->other_treatment,
+                'date'             => $request->exam_date,
+                'rct_ipc_comment'   => $request->rct_ipc_comment,
+                'extraction_comment' => $request->extraction_comment,
+                'restoration_comment' => $request->restoration_comment,
+                'prosthesis_comment' => $request->prosthesis_comment,
+                'Dentures'           => $request->Dentures,
+                'implants'           => $request->implants,
+                'other_treatment'    => $request->other_treatment,
             ]);
 
         return redirect()
             ->back()
-            ->with('success', 'Other treatment updated successfully!');
+            ->with('success', 'Treatment details updated successfully!');
     }
+
 
     public function add(Request $request, $patientId)
     {
