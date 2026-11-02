@@ -9,6 +9,35 @@
                 {{-- Alert Messages --}}
                 @include('common.alert')
 
+                @php
+                    $patientAge = $patient->Age ?? null;
+                    if (!$patientAge && $patient->dob && $patient->dob !== '0000-00-00') {
+                        $patientAge = \Carbon\Carbon::parse($patient->dob)->age;
+                    }
+                @endphp
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h5 class="card-title mb-0">Patient Information</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            <div class="col-12 col-md-4">
+                                <strong>Name:</strong>
+                                {{ trim($patient->name . ' ' . ($patient->middle_name ?? '') . ' ' . ($patient->last_name ?? '')) }}
+                            </div>
+                            <div class="col-12 col-md-3">
+                                <strong>Mobile No:</strong> {{ $patient->mobile1 ?? '-' }}
+                            </div>
+                            <div class="col-6 col-md-2">
+                                <strong>Age:</strong> {{ $patientAge ?: '-' }}
+                            </div>
+                            <div class="col-6 col-md-3">
+                                <strong>Case No:</strong> {{ $patient->case_no ?? '-' }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Notes List Section -->
                 <div class="col-lg-12">
                     <div class="card">
@@ -16,8 +45,6 @@
                             <h5 class="card-title mb-0">Reason For Visit Today List</h5>
                             <div class="d-flex justify-content-between align-items-center m-3">
                                 <h5 class="mb-0">
-
-
                                 </h5>
                             </div>
                         </div>

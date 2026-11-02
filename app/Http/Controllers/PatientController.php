@@ -30,7 +30,8 @@ class PatientController extends Controller
         $status = $request->get('status', '');
 
         $patients = Patient::query()
-
+            // Get latest visit date from notes table
+            ->withMax('notes as last_visit_date', 'date')
             ->with([
                 'notes' => function ($query) {
                     $query->with([
@@ -76,11 +77,11 @@ class PatientController extends Controller
                 }
             })
 
-            ->orderBy('id', 'desc')
-
-            // 4000-5000 patients ke liye get() use mat karo
+            //->orderBy('id', 'desc')
+            ->orderByRaw('last_visit_date IS NULL ASC')
+            ->orderByDesc('last_visit_date')
+            ->orderByDesc('id')
             ->paginate(25)
-
             ->withQueryString();
 
         $patients->getCollection()->transform(function ($patient) {
@@ -91,26 +92,21 @@ class PatientController extends Controller
                     return (float) ($note->Net_amount ?? 0);
                 });
 
-
             $patient->total_paid_amount =
                 $patient->payments->sum(function ($payment) {
 
                     return (float) ($payment->amount ?? 0);
                 });
 
-
             $patient->total_due_amount =
                 $patient->total_treatment_amount -
                 $patient->total_paid_amount;
 
-
             $patient->treatment_count =
                 $patient->notes->count();
 
-
             $patient->payment_count =
                 $patient->payments->count();
-
 
             return $patient;
         });
@@ -169,37 +165,171 @@ class PatientController extends Controller
             compact('patient')
         );
 
-
         $pdf->setPaper(
             'a4',
             'portrait'
         );
 
-        $patientName = trim(
-            ($patient->name ?? '') . '-' .
-                ($patient->middle_name ?? '') . '-' .
-                ($patient->last_name ?? '')
-        );
-
+        $patientName = implode(' ', array_filter([
+            trim($patient->name ?? ''),
+            trim($patient->middle_name ?? ''),
+            trim($patient->last_name ?? ''),
+        ], fn($value) => $value !== ''));
 
         $patientName = preg_replace(
             '/[^A-Za-z0-9\-]/',
-            '-',
+            ' ',
             $patientName
         );
-
-
+        // Remove extra spaces
+        $patientName = preg_replace('/\s+/', ' ', $patientName);
+        $patientName = trim($patientName);
+        // Patient mobile
+        $mobile = $patient->mobile1 ?: ($patient->mobile2 ?? '');
         $fileName =
-            'Patient-' .
             ($patient->case_no ?? $patient->id) .
             '-' .
             $patientName .
+            '-' .
+            $mobile .
             '.pdf';
-
-
 
         return $pdf->stream($fileName);
         // return $pdf->download($fileName);
+    }
+
+    public function patientBackupBulkPdf(Request $request)
+    {
+        $validated = $request->validate([
+            'patient_ids' => 'required|array|min:1|max:25',
+            'patient_ids.*' => 'required|integer|distinct|exists:patients,id',
+        ]);
+
+        $patientIds = $validated['patient_ids'];
+
+        $patients = Patient::with([
+            'notes' => function ($query) {
+                $query->with([
+                    'treatment_detail',
+                    'subTreatment'
+                ])
+                    ->orderBy('date', 'asc')
+                    ->orderBy('id', 'asc');
+            },
+
+            'payments' => function ($query) {
+                $query->orderBy('payment_date', 'asc')
+                    ->orderBy('id', 'asc');
+            }
+        ])
+            ->whereIn('id', $patientIds)
+            ->get()
+            ->keyBy('id');
+
+        // Create temporary ZIP file
+        $tempFile = tempnam(sys_get_temp_dir(), 'patient_backup_');
+
+        if ($tempFile === false) {
+            abort(500, 'Unable to create temporary ZIP file.');
+        }
+
+        $zip = new \ZipArchive();
+
+        if ($zip->open($tempFile, \ZipArchive::CREATE | \ZipArchive::OVERWRITE) !== true) {
+            @unlink($tempFile);
+            abort(500, 'Unable to create ZIP archive.');
+        }
+
+        try {
+            foreach ($patientIds as $id) {
+
+                $patient = $patients->get($id);
+
+                if (!$patient) {
+                    continue;
+                }
+
+                // Treatment total
+                $patient->total_treatment_amount =
+                    $patient->notes->sum(function ($note) {
+                        return (float) ($note->Net_amount ?? 0);
+                    });
+
+                // Payment total
+                $patient->total_paid_amount =
+                    $patient->payments->sum(function ($payment) {
+                        return (float) ($payment->amount ?? 0);
+                    });
+
+                // Due total
+                $patient->total_due_amount =
+                    $patient->total_treatment_amount -
+                    $patient->total_paid_amount;
+
+                // Generate PDF using existing Blade file
+                $pdf = Pdf::loadView(
+                    'reports.patient-single-backup-pdf',
+                    compact('patient')
+                );
+
+                $pdf->setPaper('a4', 'portrait');
+
+                // Patient filename
+                $patientName = implode(' ', array_filter([
+                    trim($patient->name ?? ''),
+                    trim($patient->middle_name ?? ''),
+                    trim($patient->last_name ?? ''),
+                ], fn($value) => $value !== ''));
+
+                $patientName = preg_replace(
+                    '/[^A-Za-z0-9\-]/',
+                    ' ',
+                    $patientName
+                );
+                // Remove extra spaces
+                $patientName = preg_replace('/\s+/', ' ', $patientName);
+                $patientName = trim($patientName);
+                // Patient mobile
+                $mobile = $patient->mobile1 ?: ($patient->mobile2 ?? '');
+                $fileName =
+                    ($patient->case_no ?? $patient->id) .
+                    '-' .
+                    $patientName .
+                    '-' .
+                    $mobile .
+                    '.pdf';
+
+                // Add generated PDF to ZIP
+                $zip->addFromString(
+                    $fileName,
+                    $pdf->output()
+                );
+            }
+
+            if (!$zip->close()) {
+                throw new \RuntimeException('Unable to finalize ZIP archive.');
+            }
+
+            $zipFileName =
+                'Patient-Backup-' .
+                now()->format('Y-m-d-H-i-s') .
+                '.zip';
+
+            return response()
+                ->download($tempFile, $zipFileName, [
+                    'Content-Type' => 'application/zip'
+                ])
+                ->deleteFileAfterSend(true);
+        } catch (\Throwable $e) {
+
+            $zip->close();
+
+            if (file_exists($tempFile)) {
+                @unlink($tempFile);
+            }
+
+            throw $e;
+        }
     }
 
     public function overview(Request $request, $patient_id = null)

@@ -215,55 +215,35 @@ class IntraoralExaminationController extends Controller
         ));
     }
 
-    public function update(Request $request, $patientId, $id)
+
+    public function update(Request $request, $examinationid)
     {
         $request->validate([
-            'exam_date' => 'required|date',
+            'exam_date' => 'nullable|date',
         ]);
 
-        $examination = IntraoralExamination::findOrFail($id);
-
-        $csvFields = [
-            'caries',
-            'pain_op',
-            'missing',
-            'mobility',
-            'prosthesis'
-        ];
-
-        $data = [
-            'exam_date'   => $request->exam_date,
+        $examination = IntraoralExamination::findOrFail($examinationid);
+        $examDate = $request->exam_date ?: date('Y-m-d');
+        $examination->update([
+            'exam_date'   => $examDate,
+            'impacted'    => $request->impacted,
+            'Pocket'      => $request->pocket,
+            'vitality'    => $request->vitality,
+            'Sensitivity' => $request->sensitivity,
             'plaque'      => $request->plaque,
             'calculus'    => $request->calculus,
             'stains'      => $request->stains,
-            'impacted'    => $request->impacted,
-            'pocket'      => $request->pocket,
-            'vitality'    => $request->vitality,
-            'sensitivity' => $request->sensitivity,
-            'bop'         => $request->bop,
+            'BOP'         => $request->bop,
             'notes'       => $request->notes,
-        ];
+            'diagnosis'   => $request->diagnosis,
+        ]);
 
-        foreach ($csvFields as $field) {
-            if ($request->$field) {
-                $values = collect(explode(',', $request->$field))
-                    ->map(fn($t) => trim($t))
-                    ->filter(fn($t) => is_numeric($t))
-                    ->map(fn($t) => intval($t))
-                    ->sort()
-                    ->values()
-                    ->toArray();
-
-                $data[$field] = implode(',', $values);
-            } else {
-                $data[$field] = null;
-            }
-        }
-
-        $examination->update($data);
-
-        return redirect()->route('IntraoralExamination.index', $patientId)
-            ->with('success', 'Examination updated successfully!');
+        return redirect()
+            ->route('IntraoralExamination.index', [
+                'patient' => $examination->patient_id,
+                'date' => $examDate,
+            ])
+            ->with('success', 'Examination details updated successfully!');
     }
 
     public function destroy($id)

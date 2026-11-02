@@ -28,9 +28,9 @@
         }
 
         /* .fc-timeGridWeek-view .fc-timegrid-event {
-                                                                                                                                                                                                            min-width: 100px !important;
-                                                                                                                                                                                                            min-height: 20px !important;
-                                                                                                                                                                                                        } */
+                                                                                                                                                                                                                                                        min-width: 100px !important;
+                                                                                                                                                                                                                                                        min-height: 20px !important;
+                                                                                                                                                                                                                                                    } */
 
         /* Same-time appointments overlap fix */
         .fc-timeGridWeek-view .fc-timegrid-event,
@@ -266,9 +266,9 @@
                     <div class="modal-body">
                         <div class="form-group">
                             <label>Patient</label>
-                            <input type="text" class="form-control" id="patient_search"
-                                placeholder="Search patient name">
-                            <input type="hidden" id="patient_id" name="patient_id">
+                            <input type="text" class="form-control" id="patient_search" placeholder="Search patient name"
+                                value="{{ $patient->name ?? '' }}" autocomplete="off">
+                            <input type="hidden" id="patient_id" name="patient_id" value="{{ $patient->id ?? '' }}">
                         </div>
 
                         <div class="form-group">
@@ -282,11 +282,12 @@
                         <div class="form-group">
                             <label>Contact No</label>
                             <input type="text" class="form-control" id="contact_no" name="contact_no" maxlength="10"
-                                readonly>
+                                value="{{ $patient->mobile1 ?? '' }}" readonly>
                         </div>
                         <div class="form-group">
                             <label>Email</label>
-                            <input type="email" class="form-control" id="email" name="email" readonly>
+                            <input type="email" class="form-control" id="email" name="email"
+                                value="{{ $patient->email ?? '' }}" readonly>
                         </div>
                         <div class="form-group">
                             <label>
@@ -606,12 +607,20 @@
                         method: 'GET',
                         success: function(data) {
                             console.log(data);
-                            $('#contact_no').val(data.contact_no || '');
+                            $('#contact_no').val(data.mobile1 || data.contact_no || '');
                             $('#email').val(data.email || '');
                         }
                     });
                     return false;
                 }
+            });
+            // Clear selected patient if its name is manually changed
+            $('#patient_search').on('input', function() {
+
+                $('#patient_id').val('');
+                $('#contact_no').val('');
+                $('#email').val('');
+
             });
 
             var calendar = new FullCalendar.Calendar(document.getElementById('calendar'), {
@@ -661,25 +670,49 @@
                     right: 'dayGridMonth,timeGridWeek,timeGridDay'
                 },
 
+
                 select: function(info) {
+
                     let start = new Date(info.start);
 
-                    let date = start.toISOString().split('T')[0];
+                    let year = start.getFullYear();
+                    let month = String(start.getMonth() + 1).padStart(2, '0');
+                    let day = String(start.getDate()).padStart(2, '0');
 
-                    let hours = start.getHours().toString().padStart(2, '0');
-                    let minutes = start.getMinutes().toString().padStart(2, '0');
+                    let date = `${year}-${month}-${day}`;
+
+                    let hours = start.getHours();
+                    let minutes = String(start.getMinutes()).padStart(2, '0');
 
                     let ampm = hours >= 12 ? 'PM' : 'AM';
+
                     hours = hours % 12;
                     hours = hours ? hours : 12;
 
                     let formattedTime = hours + ':' + minutes + ' ' + ampm;
 
+                    // Set selected calendar date and time
                     $('#schedule_date').val(date);
                     $('#followup_datetime').val(formattedTime);
 
+                    // Get patient data passed from Laravel controller
+                    const patient = @json($patient);
+
+                    if (patient) {
+
+                        // Correct patient database fields
+                        $('#patient_search').val(patient.name || '');
+                        $('#patient_id').val(patient.id || '');
+                        $('#contact_no').val(patient.mobile1 || '');
+                        $('#email').val(patient.email || '');
+
+                    }
+
+                    // Open appointment popup
                     $('#appointmentModal').modal('show');
+
                 },
+
 
                 // eventClick: function(info) {
 

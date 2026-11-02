@@ -363,93 +363,99 @@
                                     <div class="mb-4">
                                         <h6 class="border-bottom pb-2 mb-3">Text Parameters</h6>
                                         <div class="row">
-
-                                            <div class="mb-3 col-lg-12">
-                                                <label for="exam_date" class="form-label">Date</label>
-                                                <input type="date" name="exam_date" id="exam_date" class="form-control"
-                                                    value="{{ date('Y-m-d') }}">
-                                            </div>
-
-                                            @php
-                                                $treatments = [
-                                                    'Scaling',
-                                                    // 'polishing',
-                                                    'Grinding',
-                                                    // 'Bleaching',
-                                                    // 'smile_design',
-                                                    'orthodontics',
-                                                    // 'surgery',
-                                                    // 'biopsy',
-                                                ];
-                                            @endphp
-
-                                            @foreach ($treatments as $treatment)
-                                                <div class="mb-3">
-                                                    <strong>{{ str_replace('_', ' ', $treatment) }}:</strong>
-
-                                                    @if ($examination->$treatment == 1)
-                                                        <span class="badge bg-success">Yes</span>
-                                                        <div class="mt-1 text-muted">
-                                                            {{ $examination->{$treatment . '_desc'} ?? '' }}
-                                                        </div>
-                                                    @else
-                                                        <span class="text-muted">No</span>
-                                                    @endif
-                                                </div>
-                                            @endforeach
-                                            <div class="row">
-                                                <div class="col-md-6">
-
-                                                    <label for="pocket" class="form-label">RCT/IPC Comments</label>
-                                                    <textarea name="pocket" id="pocket" class="form-control" rows="2"
-                                                        placeholder="Describe pocket conditions...">{{ $examination->rct_ipc_comment ?? '' }}</textarea>
-
-                                                </div>
-                                                <div class="col-md-6">
-
-                                                    <label for="pocket" class="form-label">Extraction Comments</label>
-                                                    <textarea name="pocket" id="pocket" class="form-control" rows="2"
-                                                        placeholder="Describe pocket conditions...">{{ $examination->extraction_comment ?? '' }}</textarea>
-
-                                                </div>
-                                            </div>
-
-                                            <div class="row">
-                                                <div class="col-md-6">
-                                                    <label for="pocket" class="form-label">Restoration Comments</label>
-                                                    <textarea name="pocket" id="pocket" class="form-control" rows="2"
-                                                        placeholder="Describe pocket conditions...">{{ $examination->rct_ipc_comment ?? '' }}</textarea>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label for="pocket" class="form-label">Prosthesis Comments</label>
-                                                    <textarea name="pocket" id="pocket" class="form-control" rows="2"
-                                                        placeholder="Describe pocket conditions...">{{ $examination->prosthesis_comment ?? '' }}</textarea>
-
-                                                </div>
-                                            </div>
-
-
-                                            <div class="mb-3 col-lg-6">
-                                                <label for="impacted" class="form-label">Dentures:CD / RPD / CPD /
-                                                    Overdenture/</label>
-                                                <textarea name="impacted" id="impacted" class="form-control" rows="2"
-                                                    placeholder="Describe impacted teeth...">{{ $examination->Dentures ?? '' }}</textarea>
-                                            </div>
-
-                                            <div class="mb-3 col-lg-6">
-                                                <label for="pocket" class="form-label">implants</label>
-                                                <textarea name="pocket" id="pocket" class="form-control" rows="2"
-                                                    placeholder="Describe pocket conditions...">{{ $examination->implants ?? '' }}</textarea>
-                                            </div>
                                             <form method="POST"
                                                 action="{{ route('TreatmentPlan.update', $examination->id) }}">
+                                                @csrf
+                                                <div class="mb-3 col-lg-12">
+                                                    <label for="exam_date" class="form-label">Date</label>
+                                                    <input type="date" name="exam_date" id="exam_date"
+                                                        class="form-control"
+                                                        value="{{ old('date', isset($examination) && $examination->date ? \Carbon\Carbon::parse($examination->date)->format('Y-m-d') : date('Y-m-d')) }}">
+                                                </div>
+
+                                                @php
+                                                    $treatments = [
+                                                        'Scaling',
+                                                        // 'polishing',
+                                                        'Grinding',
+                                                        // 'Bleaching',
+                                                        // 'smile_design',
+                                                        'orthodontics',
+                                                        // 'surgery',
+                                                        // 'biopsy',
+                                                    ];
+                                                @endphp
+
+                                                @foreach ($treatments as $treatment)
+                                                    <div class="mb-3">
+                                                        <strong>{{ str_replace('_', ' ', $treatment) }}:</strong>
+
+                                                        @if ($examination->$treatment == 1)
+                                                            <span class="badge bg-success">Yes</span>
+                                                            <div class="mt-1 text-muted">
+                                                                {{ $examination->{$treatment . '_desc'} ?? '' }}
+                                                            </div>
+                                                        @else
+                                                            <span class="text-muted">No</span>
+                                                        @endif
+                                                    </div>
+                                                @endforeach
+
+                                                <div class="row">
+                                                    <div class="col-md-6">
+
+                                                        <label for="rct_ipc_comment" class="form-label">RCT/IPC
+                                                            Comments</label>
+                                                        <textarea name="rct_ipc_comment" id="rct_ipc_comment" class="form-control" rows="2"
+                                                            placeholder="Describe pocket conditions...">{{ $examination->rct_ipc_comment ?? '' }}</textarea>
+
+                                                    </div>
+                                                    <div class="col-md-6">
+
+                                                        <label for="extraction_comment" class="form-label">Extraction
+                                                            Comments</label>
+                                                        <textarea name="extraction_comment" id="extraction_comment" class="form-control" rows="2"
+                                                            placeholder="Describe pocket conditions...">{{ $examination->extraction_comment ?? '' }}</textarea>
+
+                                                    </div>
+                                                </div>
+
+                                                <div class="row">
+                                                    <div class="col-md-6">
+                                                        <label for="restoration_comment" class="form-label">Restoration
+                                                            Comments</label>
+                                                        <textarea name="restoration_comment" id="restoration_comment" class="form-control" rows="2"
+                                                            placeholder="Describe pocket conditions...">{{ $examination->restoration_comment ?? '' }}</textarea>
+                                                    </div>
+                                                    <div class="col-md-6">
+                                                        <label for="prosthesis_comment" class="form-label">Prosthesis
+                                                            Comments</label>
+                                                        <textarea name="prosthesis_comment" id="prosthesis_comment" class="form-control" rows="2"
+                                                            placeholder="Describe pocket conditions...">{{ $examination->prosthesis_comment ?? '' }}</textarea>
+
+                                                    </div>
+                                                </div>
+
+                                                <div class="mb-3 col-lg-6">
+                                                    <label for="Dentures" class="form-label">Dentures:CD / RPD / CPD /
+                                                        Overdenture/</label>
+                                                    <textarea name="Dentures" id="Dentures" class="form-control" rows="2"
+                                                        placeholder="Describe impacted teeth...">{{ $examination->Dentures ?? '' }}</textarea>
+                                                </div>
+
+                                                <div class="mb-3 col-lg-6">
+                                                    <label for="implants" class="form-label">implants</label>
+                                                    <textarea name="implants" id="implants" class="form-control" rows="2"
+                                                        placeholder="Describe pocket conditions...">{{ $examination->implants ?? '' }}</textarea>
+                                                </div>
+
                                                 <div class="mb-3 col-lg-12">
                                                     <label for="other_treatment" class="form-label">Other
                                                         treatment</label>
                                                     <textarea name="other_treatment" id="other_treatment" class="form-control" rows="2"
                                                         placeholder="Describe Other treatment...">{{ $examination->other_treatment ?? '' }}</textarea>
                                                 </div>
-                                                @csrf
+
                                                 <div class="text-start">
                                                     <button type="submit" class="btn btn-primary">Update</button>
                                                 </div>

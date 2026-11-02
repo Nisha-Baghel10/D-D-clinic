@@ -244,7 +244,8 @@
 
 
                                                                     <td>
-                                                                        <a href="{{ route('appointment.create') }}">
+                                                                        <a
+                                                                            href="{{ route('appointment.create', $patient->id) }}">
                                                                             {{ $latestNote->next_appointment_date ?? '-' }}
                                                                         </a>
                                                                     </td>
